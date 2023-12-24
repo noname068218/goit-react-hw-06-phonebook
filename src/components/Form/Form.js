@@ -1,7 +1,11 @@
 import { Formik, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { StyledForm, FromStyle, FormGroup, FormButton } from './From.style';
-
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { addContact } from 'components/redux/contactListSlice';
+import { nanoid } from 'nanoid';
+import { toast } from 'react-toastify';
 const quizSchema = Yup.object().shape({
   name: Yup.string().min(3, 'Too Short!').required('Required'),
   number: Yup.string()
@@ -9,7 +13,10 @@ const quizSchema = Yup.object().shape({
     .required('Required'),
 });
 
-export const ContactForm = ({ onAdd }) => {
+export const ContactForm = () => {
+  const dispatch = useDispatch();
+  const contacts = useSelector(state => state.contacts);
+
   return (
     <div>
       <Formik
@@ -19,7 +26,19 @@ export const ContactForm = ({ onAdd }) => {
         }}
         validationSchema={quizSchema}
         onSubmit={(values, actions) => {
-          onAdd(values);
+          if (contacts.some(contact => contact.name === values.name)) {
+            return toast.error(
+              `${values.name} Contact with this name already exists!`
+            );
+          }
+
+          dispatch(
+            addContact({
+              name: values.name,
+              number: values.number,
+              id: nanoid(),
+            })
+          );
           actions.resetForm();
         }}
       >
